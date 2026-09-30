@@ -8,7 +8,6 @@ client_secret*.json
 .env.*
 
 training/checkpoints/
-training/runs/
 *.pt
 *.bin
 *.safetensors

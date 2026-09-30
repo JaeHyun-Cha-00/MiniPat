@@ -52,7 +52,10 @@ joined AS (
 SELECT family_id, kr_pub, en_pub, en_source, ko_abstract, en_abstract
 FROM joined
 WHERE rn = 1
-ORDER BY RAND()
+-- Hash order instead of RAND(): a well-mixed sample that is identical on every rerun.
+-- (The published splits predate this change, so they came from a RAND() sample; the
+-- HF dataset, not a rerun of this query, is the canonical copy of them.)
+ORDER BY FARM_FINGERPRINT(CAST(family_id AS STRING))
 LIMIT @sample_limit
 """
 
@@ -60,13 +63,13 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--project", default=os.environ.get("GOOGLE_CLOUD_PROJECT"))
     ap.add_argument("--sample-limit", type=int, default=30000)
-    ap.add_argument("--out", default="patent_pairs.csv")
+    ap.add_argument("--out", default="data/raw/patent_pairs.csv")  # where prep_dataset.py reads
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
- 
+
     if not args.project:
-        sys.exit("Something Wrong")
- 
+        sys.exit("No GCP project: pass --project or set GOOGLE_CLOUD_PROJECT")
+
     client = bigquery.Client(project=args.project)
     query = QUERY.format(table=TABLE)
     job_config = bigquery.QueryJobConfig(
@@ -74,19 +77,20 @@ def main():
         dry_run=args.dry_run,
         use_query_cache=not args.dry_run,
     )
- 
+
     job = client.query(query, job_config=job_config)
- 
+
     if args.dry_run:
         gb = job.total_bytes_processed / 1e9
         print(f"Estimated bytes scanned: {gb:.2f} GB "
               f"({gb / 1000:.4f} TB of your 1 TB free quota)")
         return
- 
+
     rows = list(job.result())
     print(f"Fetched {len(rows)} KR<->EN pairs. "
           f"Bytes billed: {job.total_bytes_billed / 1e9:.2f} GB")
- 
+
+    os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
     with open(args.out, "w", encoding="utf-8", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=["family_id", "kr_pub", "en_pub", "en_source", "ko_abstract", "en_abstract"])
         writer.writeheader()
@@ -99,8 +103,8 @@ def main():
                 "ko_abstract": r["ko_abstract"],
                 "en_abstract": r["en_abstract"],
             })
- 
-    print(f"Wrote {args.out} -- next: python scripts/prep_dataset.py")
+
+    print(f"Wrote {args.out} -- next: python data_pipeline/prep_dataset.py")
 
 if __name__ == "__main__":
     main()

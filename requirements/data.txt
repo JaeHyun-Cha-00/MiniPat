@@ -1,0 +1,3 @@
+# Data pipeline (data_pipeline/fetch_patent_pairs.py, data_pipeline/push_dataset.py).
+google-cloud-bigquery>=3.0
+datasets==5.0.1           # push_dataset.py

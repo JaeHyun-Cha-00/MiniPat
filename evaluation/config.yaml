@@ -1,0 +1,27 @@
+# Evaluation settings. The data source (HF dataset or local JSONL) comes from the shared
+# training config, so every system is scored on the same test split no model trained on.
+data_config: training/configs/base.yaml
+split: test
+directions: [ko-en, en-ko]
+output_dir: evaluation/outputs
+
+local:                         # systems "base" and "finetuned" (GPU pod); the model comes from --model
+  max_new_tokens: 1024         # longest test reference is well under this; see train_lora.py length report
+  batch_size: 16               # throughput run; use --batch-size 1 for the latency run
+
+openai:
+  model: gpt-6.1-sol           # override with --model; the output file is named after the model id
+  reasoning_effort: null       # null -> API default. One of none/minimal/low/medium/high/xhigh/max
+  max_output_tokens: 4096      # includes reasoning tokens
+
+deepl:
+  model_type: quality_optimized
+
+# Fill these in from the providers' pricing pages before scoring, and set `checked` to that date.
+# score.py reports cost as n/a for any system whose price is missing.
+prices:
+  checked: null                # YYYY-MM-DD
+  openai:                      # USD per 1M tokens, keyed by model id; output price applies to reasoning tokens too
+    gpt-6.1-sol: {input: null, output: null}
+  deepl_per_million_chars: null   # USD, API Pro usage price (excludes the monthly base fee)
+  gpu_per_hour: null              # USD, RunPod price of the GPU the local run used

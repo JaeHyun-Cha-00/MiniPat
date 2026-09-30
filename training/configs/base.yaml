@@ -1,0 +1,41 @@
+# Settings shared by every model. Each file in models/ names this as its base and overrides
+# only what differs per model; config.load_config merges the two (model file wins).
+seed: 42
+
+# Checkpoints go to <checkpoint_root>/<model config name>/; evaluation reads adapters from there.
+# /workspace is the RunPod network volume, so checkpoints survive pod restarts.
+checkpoint_root: /workspace/checkpoints
+
+model:
+  qlora: false               # true -> 4-bit NF4 via bitsandbytes; slower, for small GPUs
+  chat_template_kwargs:      # passed to apply_chat_template everywhere (training and evaluation)
+    enable_thinking: false   # translation needs no reasoning trace; all current models accept this
+
+data:
+  hf_dataset: null           # repo id pushed by data_pipeline/push_dataset.py; null -> read local_dir
+  local_dir: data/processed
+  directions: [ko-en, en-ko]
+  max_length: null           # tokens; per model, since tokenizers split Korean very differently.
+                             # null -> train_lora.py prints length percentiles and exits
+  val_subset: 200            # fixed first-N slice of val.jsonl used for eval loss during training
+
+lora:
+  r: 16
+  alpha: 32
+  dropout: 0.05
+  target_modules: null       # per model: regex over module names (PEFT full-matches it)
+
+train:
+  num_train_epochs: 1
+  learning_rate: 2.0e-4
+  lr_scheduler_type: cosine
+  warmup_steps: 0.03                # float < 1 = fraction of total steps (transformers 5.x)
+  per_device_train_batch_size: 4
+  gradient_accumulation_steps: 8    # effective batch 32 on one GPU
+  per_device_eval_batch_size: 8
+  gradient_checkpointing: true
+  eval_steps: 100
+  save_steps: 100
+  save_total_limit: 3
+  logging_steps: 10
+  report_to: none

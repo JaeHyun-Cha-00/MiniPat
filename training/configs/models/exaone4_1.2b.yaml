@@ -1,0 +1,13 @@
+# EXAONE-4.0-1.2B (LG AI Research): standard decoder-only transformer, Korean-focused.
+# License: research/educational use only; fine-tuned weights must not be used commercially.
+base: ../base.yaml
+params_b: 1.2
+
+model:
+  name: LGAI-EXAONE/EXAONE-4.0-1.2B
+
+data:
+  max_length: 1024           # train p99=828 tokens (EXAONE tokenizer)
+
+lora:
+  target_modules: 'model\.layers\.\d+\.(self_attn\.[qkvo]_proj|mlp\.(gate|up|down)_proj)'

@@ -1,0 +1,14 @@
+# Keep the build context small: data comes from the HF dataset, checkpoints from /workspace.
+.git
+data/
+training/checkpoints/
+wandb/
+**/__pycache__
+.venv/
+venv/
+.DS_Store
+*-service-account.json
+service-account*.json
+credentials.json
+.env
+.env.*

@@ -1,0 +1,4 @@
+# API clients for evaluation/translate.py. Installed into the training image too
+# (compatible with train.txt), so every system can run from one environment.
+openai==3.22.1
+deepl==1.32.0

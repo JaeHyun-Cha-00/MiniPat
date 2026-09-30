@@ -1,0 +1,18 @@
+# Qwen3.5-4B: hybrid decoder (Gated DeltaNet linear-attention + full-attention layers),
+# packaged as a vision-language model. Only the text decoder gets LoRA.
+base: ../base.yaml
+params_b: 4              # advertised size in billions, for plots
+
+model:
+  name: Qwen/Qwen3.5-4B     # post-trained chat model, not -Base: the baseline must follow instructions
+
+data:
+  max_length: 1024           # train p99=845 tokens (Qwen tokenizer)
+
+lora:
+  # Text decoder only (skips model.visual.* and the mtp.* multi-token-prediction head).
+  # full-attention layers:   self_attn.{q,k,v,o}_proj
+  # Gated DeltaNet layers:   linear_attn.{in_proj_qkv,in_proj_z,out_proj}
+  #   (in_proj_a / in_proj_b / conv1d / A_log control state decay; left frozen for stability)
+  # all layers:              mlp.{gate,up,down}_proj
+  target_modules: '.*language_model\.layers\.\d+\.(self_attn\.[qkvo]_proj|linear_attn\.(in_proj_qkv|in_proj_z|out_proj)|mlp\.(gate|up|down)_proj)'

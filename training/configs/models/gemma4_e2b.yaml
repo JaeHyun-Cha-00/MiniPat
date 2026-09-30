@@ -1,0 +1,15 @@
+# Gemma-4-E2B-it (Google): "E2B" = about 2B effective parameters; the checkpoint also holds
+# per-layer embeddings and vision/audio encoders. Gated on Hugging Face: accept the license first.
+base: ../base.yaml
+params_b: 2                  # effective size, as advertised
+
+model:
+  name: google/gemma-4-E2B-it
+
+data:
+  max_length: 1024           # train p99=867 tokens (Gemma tokenizer)
+
+lora:
+  # Text decoder attention + MLP only. Skips model.vision_tower / model.audio_tower and the
+  # per_layer_input_gate / per_layer_projection modules of the per-layer-embedding path.
+  target_modules: '.*language_model\.layers\.\d+\.(self_attn\.[qkvo]_proj|mlp\.(gate|up|down)_proj)'

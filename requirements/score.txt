@@ -1,0 +1,10 @@
+# evaluation/score.py and plot.py. Separate environment: unbabel-comet requires transformers<5,
+# huggingface-hub<1 and numpy<2, which conflict with train.txt.
+sacrebleu==2.6.0
+sentencepiece==0.2.2      # sacrebleu's flores200 BLEU tokenizer
+unbabel-comet==2.2.7
+transformers==4.57.6
+huggingface-hub==0.36.2
+numpy==1.26.4
+pyyaml==6.0.3
+matplotlib==3.11.2        # evaluation/plot.py

@@ -1,0 +1,13 @@
+# Training environment, pinned to the versions train_lora.py was tested against.
+# The Dockerfile installs this on top of the matching pytorch/pytorch base image.
+# causal-conv1d is not listed: it ships source only and is compiled in the Dockerfile.
+torch==2.14.0
+transformers==5.17.0
+tokenizers==0.23.2
+huggingface-hub==1.33.0   # transformers 5.17 requires <2.0
+peft==0.21.1
+accelerate==1.15.0
+datasets==5.0.1
+bitsandbytes==0.50.2      # only used with model.qlora: true
+flash-linear-attention==0.5.2   # fast Gated DeltaNet kernels (Triton, no compile step)
+pyyaml==6.0.3
