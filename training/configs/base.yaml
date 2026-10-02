@@ -12,7 +12,7 @@ model:
     enable_thinking: false   # translation needs no reasoning trace; all current models accept this
 
 data:
-  hf_dataset: null           # repo id pushed by data_pipeline/push_dataset.py; null -> read local_dir
+  hf_dataset: j4cha/minipat-ko-en  # repo id pushed by data_pipeline/push_dataset.py; null -> read local_dir
   local_dir: data/processed
   directions: [ko-en, en-ko]
   max_length: null           # tokens; per model, since tokenizers split Korean very differently.

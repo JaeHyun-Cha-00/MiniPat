@@ -4,7 +4,7 @@
 #   hf auth login        # or export HF_TOKEN=...
 #   python data_pipeline/push_dataset.py --repo <user>/minipat-ko-en
 #
-# Then set data.hf_dataset in training/configs/qwen35_4b.yaml to the same repo id.
+# Then set data.hf_dataset in training/configs/base.yaml to the same repo id.
 
 import argparse
 import hashlib
