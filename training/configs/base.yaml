@@ -30,10 +30,10 @@ train:
   learning_rate: 2.0e-4
   lr_scheduler_type: cosine
   warmup_steps: 0.03                # float < 1 = fraction of total steps (transformers 5.x)
-  per_device_train_batch_size: 8
-  gradient_accumulation_steps: 4    # effective batch 32 on one GPU
+  per_device_train_batch_size: 4    # 8 ran out of memory on an L40S (0.8B, no checkpointing): the
+  gradient_accumulation_steps: 8    # fp32 logits over a ~250k vocabulary dominate. Effective batch 32.
   per_device_eval_batch_size: 8
-  gradient_checkpointing: false     # off for speed on a 48 GB GPU (L40S); the 4B config turns it on
+  gradient_checkpointing: false     # off for speed on a 48 GB GPU (L40S); the 2B+ configs turn it on
   eval_steps: 100
   save_steps: 100
   save_total_limit: 3

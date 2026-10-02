@@ -9,6 +9,9 @@ model:
 data:
   max_length: 1024           # train p99=867 tokens (Gemma tokenizer)
 
+train:
+  gradient_checkpointing: true   # 2B+ models: activations may not fit in 48 GB without it
+
 lora:
   # Text decoder attention + MLP only. Skips model.vision_tower / model.audio_tower and the
   # per_layer_input_gate / per_layer_projection modules of the per-layer-embedding path.

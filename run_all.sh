@@ -12,6 +12,7 @@
 cd "$(dirname "$0")"
 # Model downloads go to the network volume (as in the Dockerfile), not the 30 GB container disk.
 export HF_HOME=/workspace/hf_cache
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True   # less fragmentation with variable-length batches
 MODELS=${MODELS:-"qwen35_0.8b exaone4_1.2b qwen35_2b gemma4_e2b qwen35_4b"}
 LOG_DIR=/workspace/logs
 mkdir -p "$LOG_DIR"
