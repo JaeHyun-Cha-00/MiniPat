@@ -1,7 +1,7 @@
 # JSONL splits -> LoRA/QLoRA adapter for one model (KO<->EN patent abstracts)
 #
-#   python training/train_lora.py --model qwen35_4b          # = training/configs/models/qwen35_4b.yaml
-#   python training/train_lora.py --model qwen35_4b --limit 256 --max-steps 20   # smoke test
+#   python training/train_lora.py --model qwen35_2b          # = training/configs/models/qwen35_2b.yaml
+#   python training/train_lora.py --model qwen35_2b --limit 256 --max-steps 20   # smoke test
 #   python training/train_lora.py --config path/to/any.yaml  # a config outside configs/models/
 #
 # With data.max_length unset, the script prints token-length percentiles and exits,
@@ -157,7 +157,7 @@ def write_run_info(out_dir, cfg, args):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--model", help="name of a file in training/configs/models/, e.g. qwen35_4b")
+    ap.add_argument("--model", help="name of a file in training/configs/models/, e.g. qwen35_2b")
     ap.add_argument("--config", help="path to a model config (alternative to --model)")
     ap.add_argument("--limit", type=int, help="use only the first N train/val pairs (smoke tests)")
     ap.add_argument("--max-steps", type=int, help="override: stop after N optimizer steps")

@@ -2,7 +2,7 @@
 #
 #   docker build --build-arg GIT_SHA=$(git rev-parse HEAD) -t minipat .
 #   docker run --gpus all -e HF_TOKEN -v /workspace:/workspace minipat \
-#       python training/train_lora.py --model qwen35_4b    # -> /workspace/checkpoints/qwen35_4b
+#       python training/train_lora.py --model qwen35_2b    # -> /workspace/checkpoints/qwen35_2b
 #
 # On RunPod the network volume is mounted at /workspace; the model cache and checkpoints go
 # there so they survive pod restarts. Data comes from the HF dataset (see data_pipeline/push_dataset.py).

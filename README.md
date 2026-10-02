@@ -1,6 +1,6 @@
 # MiniPat
 
-LoRA fine-tuning of **small open models (0.8B–4B)** for Korean ↔ English translation of patent abstracts. Each model is compared before and after fine-tuning, and against an OpenAI GPT-6 model and DeepL, on quality, cost, and latency.
+LoRA fine-tuning of **small open models (0.8B–2B)** for Korean ↔ English translation of patent abstracts. Each model is compared before and after fine-tuning, and against an OpenAI GPT-6 model and DeepL, on quality, cost, and latency.
 
 > **Status: in progress.** The data pipeline is done. The training and evaluation code is written and tested on CPU with tiny stand-ins of each model family, but has not yet been run on a GPU. **There are no results yet**, and none will be reported here until the runs are done.
 
@@ -39,9 +39,8 @@ The published splits come from an earlier `ORDER BY RAND()` sample. The query no
 
 | Config | Model | Size | Why it's in the comparison |
 |---|---|---|---|
-| `qwen35_0.8b` | `Qwen/Qwen3.5-0.8B` | 0.8B | same family at three sizes: how quality scales with size |
+| `qwen35_0.8b` | `Qwen/Qwen3.5-0.8B` | 0.8B | same family at two sizes: how quality scales with size |
 | `qwen35_2b` | `Qwen/Qwen3.5-2B` | 2B | |
-| `qwen35_4b` | `Qwen/Qwen3.5-4B` | 4B | |
 | `exaone4_1.2b` | `LGAI-EXAONE/EXAONE-4.0-1.2B` | 1.2B | Korean-focused model (LG AI Research) |
 | `gemma4_e2b` | `google/gemma-4-E2B-it` | 2B effective | a different family at a similar size |
 
@@ -58,7 +57,7 @@ pip install -r requirements/train.txt
 # smoke test first
 python training/train_lora.py --model qwen35_0.8b --limit 256 --max-steps 20 --output-dir /workspace/checkpoints/smoke
 # full runs -> /workspace/checkpoints/<model>/final
-for m in qwen35_0.8b qwen35_2b qwen35_4b exaone4_1.2b gemma4_e2b; do
+for m in qwen35_0.8b qwen35_2b exaone4_1.2b gemma4_e2b; do
     python training/train_lora.py --model $m
 done
 ```
@@ -81,7 +80,7 @@ Every system translates the 500-pair test split in both directions:
 ```bash
 pip install -r requirements/train.txt -r requirements/eval.txt
 python evaluation/translate.py --system finetuned --model qwen35_0.8b --limit 5   # pre-flight
-for m in qwen35_0.8b qwen35_2b qwen35_4b exaone4_1.2b gemma4_e2b; do
+for m in qwen35_0.8b qwen35_2b exaone4_1.2b gemma4_e2b; do
     python evaluation/translate.py --system base --model $m
     python evaluation/translate.py --system finetuned --model $m
     python evaluation/translate.py --system finetuned --model $m --batch-size 1 --limit 50 --tag latency
@@ -104,7 +103,7 @@ python -m venv .venv-score && .venv-score/bin/pip install -r requirements/score.
 ```bash
 docker build --build-arg GIT_SHA=$(git rev-parse HEAD) -t minipat .
 docker run --gpus all -e HF_TOKEN -v /workspace:/workspace minipat \
-    python training/train_lora.py --model qwen35_4b
+    python training/train_lora.py --model qwen35_2b
 ```
 
 The image targets RunPod: the network volume at `/workspace` holds the Hugging Face cache and checkpoints. RunPod pods can't build images, so build and push the image from another machine; alternatively, install `requirements/train.txt` on RunPod's PyTorch template, which uses the same pinned versions.

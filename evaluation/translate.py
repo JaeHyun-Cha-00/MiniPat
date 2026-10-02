@@ -1,13 +1,13 @@
 # Test split -> translations from one system, with per-example latency and usage.
 #
-#   python evaluation/translate.py --system base --model qwen35_4b       # GPU pod; --model is a
-#   python evaluation/translate.py --system finetuned --model qwen35_4b  #   training/configs/models/ name
+#   python evaluation/translate.py --system base --model qwen35_2b       # GPU pod; --model is a
+#   python evaluation/translate.py --system finetuned --model qwen35_2b  #   training/configs/models/ name
 #   python evaluation/translate.py --system openai [--model ID]    # needs OPENAI_API_KEY
 #   python evaluation/translate.py --system deepl                  # needs DEEPL_AUTH_KEY
 #
 #   --limit 5                            pre-flight check before paying for a full run
 #   --batch-size 1 --limit 50 --tag latency   single-request latency run for the local models
-#                     (-> qwen35_4b-base__latency.jsonl; "__" because model names contain dots)
+#                     (-> qwen35_2b-base__latency.jsonl; "__" because model names contain dots)
 #
 # Output: <output_dir>/<name>.jsonl, one line per (pair, direction), appended as it goes.
 # Rerunning skips ids already in the file, so a crash never pays for the same call twice.
@@ -182,7 +182,7 @@ def main():
     batch_size = 1
     if args.system in ("base", "finetuned"):
         if not args.model:
-            ap.error("--model is required for base/finetuned, e.g. --model qwen35_4b")
+            ap.error("--model is required for base/finetuned, e.g. --model qwen35_2b")
         model_cfg = load_config(model_config_path(args.model))
         batch_size = args.batch_size or cfg["local"]["batch_size"]
         adapter = None
