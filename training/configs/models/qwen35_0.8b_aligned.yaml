@@ -1,0 +1,7 @@
+# Qwen3.5-0.8B trained only on pairs whose English abstract is close to a translation of the
+# Korean one (LaBSE >= 0.80). Same model and settings as qwen35_0.8b otherwise, so the two runs
+# isolate the effect of the training data. Evaluated on the same full test split.
+base: qwen35_0.8b.yaml
+
+data:
+  min_labse: 0.80

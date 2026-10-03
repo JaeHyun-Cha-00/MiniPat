@@ -172,7 +172,16 @@ def main():
 
     tokenizer = AutoTokenizer.from_pretrained(cfg["model"]["name"])
     val_n = min(cfg["data"]["val_subset"], args.limit or cfg["data"]["val_subset"])
-    train_ds = build_dataset(load_pairs(cfg["data"], "train", args.limit), cfg, tokenizer)
+    train_pairs = load_pairs(cfg["data"], "train", args.limit)
+    min_labse = cfg["data"].get("min_labse")
+    if min_labse is not None:  # keep only pairs whose English abstract is close to a translation
+        if "labse_sim" not in train_pairs[0]:
+            sys.exit("data.min_labse is set but the dataset has no labse_sim column "
+                     "(data_pipeline/score_alignment.py, then push_dataset.py)")
+        n = len(train_pairs)
+        train_pairs = [p for p in train_pairs if p["labse_sim"] >= min_labse]
+        print(f"[train] kept {len(train_pairs)} / {n} pairs with labse_sim >= {min_labse}")
+    train_ds = build_dataset(train_pairs, cfg, tokenizer)
     val_ds = build_dataset(load_pairs(cfg["data"], "val", val_n), cfg, tokenizer)
     report_lengths(train_ds, "train")
     report_lengths(val_ds, "val")

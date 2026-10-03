@@ -1,0 +1,5 @@
+# data_pipeline/score_alignment.py (LaBSE pair similarity). Runs on CPU, Apple MPS, or CUDA.
+sentence-transformers==6.1.0
+torch==2.14.1
+transformers==5.18.0
+numpy==2.5.3

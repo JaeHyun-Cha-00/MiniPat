@@ -22,12 +22,15 @@ Pairs come from [Google Patents Public Data](https://console.cloud.google.com/ma
 - **Filters:** length limits for each language, and an EN/KO character-length ratio between 0.8 and 6.0 to drop misaligned pairs.
 - **Splits:** 28,146 train / 1,000 val / 500 test pairs. No family appears in more than one split. Each split is about 62% WO and 38% US.
 - **Caveat:** for WO families the Korean abstract is often a translation of the English one (or of a third language), so KO→EN test references can be closer to the source than a naturally written English abstract would be. `score.py` reports WO and US separately for this reason.
+- **Not every pair is a translation.** US abstracts are often written separately from the Korean one: same invention, different content and structure. `data_pipeline/score_alignment.py` scores each pair by LaBSE similarity (unrelated pairs ≈ 0.44, close translations ≈ 0.9). Below 0.80 are 11.4% of train pairs (WO 4.1%, US 23.8%). `score.py` also reports an "aligned" test subset (LaBSE ≥ 0.80, 442 of 500 pairs), and `qwen35_0.8b_aligned` trains on the 24,949 aligned train pairs only.
 
 ```bash
 pip install -r requirements/data.txt
 python data_pipeline/fetch_patent_pairs.py --project <gcp-project> --dry-run   # estimate bytes scanned
 python data_pipeline/fetch_patent_pairs.py --project <gcp-project>            # -> data/raw/patent_pairs.csv
 python data_pipeline/prep_dataset.py                                          # -> data/processed/{train,val,test}.jsonl
+pip install -r requirements/align.txt
+python data_pipeline/score_alignment.py                                       # -> data/processed/labse_{train,val,test}.jsonl
 python data_pipeline/push_dataset.py --repo <user>/minipat-ko-en              # private HF dataset
 ```
 

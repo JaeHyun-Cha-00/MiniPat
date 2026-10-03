@@ -18,6 +18,8 @@ data:
   max_length: null           # tokens; per model, since tokenizers split Korean very differently.
                              # null -> train_lora.py prints length percentiles and exits
   val_subset: 200            # fixed first-N slice of val.jsonl used for eval loss during training
+  min_labse: null            # train only on pairs with labse_sim >= this (see score_alignment.py);
+                             # val and test are never filtered, so runs stay comparable
 
 lora:
   r: 16

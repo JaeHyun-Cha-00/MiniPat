@@ -4,7 +4,9 @@
 #   python -m venv .venv-score && .venv-score/bin/pip install -r requirements/score.txt
 #   .venv-score/bin/python evaluation/score.py evaluation/outputs/*.jsonl [--no-comet]
 #
-# Quality (BLEU, chrF++, COMET) is reported overall, per direction, and per en_source (WO/US).
+# Quality (BLEU, chrF++, COMET) is reported overall, per direction, per en_source (WO/US), and on
+# the "aligned" subset: pairs whose LaBSE similarity (data_pipeline/score_alignment.py) is at least
+# --min-labse, i.e. where the reference is close to a translation of the source.
 # Latency comes only from rows translated one request at a time (batch_size == 1): the API
 # systems, and the local systems' "--tag latency" runs. Cost comes from the full runs.
 
@@ -88,6 +90,9 @@ def main():
     ap.add_argument("--config", default="evaluation/config.yaml")
     ap.add_argument("--no-comet", action="store_true", help="skip COMET (slow without a GPU)")
     ap.add_argument("--out", default="evaluation/results/scores.json")
+    ap.add_argument("--alignment", default="data/processed/labse_test.jsonl",
+                    help="score_alignment.py output; the aligned subset is skipped if the file is missing")
+    ap.add_argument("--min-labse", type=float, default=0.80)
     args = ap.parse_args()
 
     with open(args.config) as f:
@@ -102,6 +107,12 @@ def main():
         system, _, tag = name.partition("__")
         by_system[system]["latency" if tag == "latency" else "full"].extend(read_jsonl(path))
 
+    aligned = None
+    if os.path.exists(args.alignment):
+        aligned = {r["family_id"] for r in read_jsonl(args.alignment) if r["labse_sim"] >= args.min_labse}
+    else:
+        print(f"NOTE: {args.alignment} not found; no aligned-subset scores.")
+
     results = {}
     for system, parts in sorted(by_system.items()):
         rows = parts["full"]
@@ -113,6 +124,8 @@ def main():
         for i, r in enumerate(rows):
             groups.setdefault(r["direction"], []).append(i)
             groups.setdefault(f"{r['direction']}/{r['en_source']}", []).append(i)
+            if aligned is not None and r["family_id"] in aligned:
+                groups.setdefault(f"{r['direction']}/aligned", []).append(i)
         results[system] = {
             "quality": {
                 g: quality([rows[i] for i in idx], None if comet is None else [comet[i] for i in idx])
@@ -125,6 +138,7 @@ def main():
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
     with open(args.out, "w") as f:
         json.dump({"prices_checked": prices.get("checked"), "comet_model": None if args.no_comet else COMET_MODEL,
+                   "min_labse": args.min_labse if aligned is not None else None,
                    "systems": results}, f, indent=2)
 
     cols = ["bleu", "chrf++"] + ([] if args.no_comet else ["comet"])
@@ -133,7 +147,7 @@ def main():
     for system, r in results.items():
         lat = r["latency"]["p50_s"] if r["latency"] else "n/a"
         cost = r["cost_usd_per_1k"] if r["cost_usd_per_1k"] is not None else "n/a"
-        for d in ("ko-en", "en-ko"):
+        for d in ("ko-en", "en-ko", "ko-en/aligned", "en-ko/aligned"):
             q = r["quality"].get(d)
             if q:
                 print(f"| {system} | {d} | {q['n']} | " + " | ".join(str(q[c]) for c in cols) + f" | {cost} | {lat} |")
