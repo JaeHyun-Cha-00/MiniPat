@@ -17,7 +17,10 @@ __pycache__/
 *.py[cod]
 .venv/
 venv/
+.venv-*/
 *.egg-info/
 .ipynb_checkpoints/
 
 .DS_Store
+
+runpod/

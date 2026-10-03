@@ -1,7 +1,7 @@
 # Saved translations -> quality, cost, and latency per system.
 # Runs in its own environment: unbabel-comet needs transformers<5, the training image has 5.x.
 #
-#   python -m venv .venv-score && .venv-score/bin/pip install -r requirements/score.txt
+#   uv venv --python 3.12 .venv-score && uv pip install --python .venv-score/bin/python -r requirements/score.txt
 #   .venv-score/bin/python evaluation/score.py evaluation/outputs/*.jsonl [--no-comet]
 #
 # Quality (BLEU, chrF++, COMET) is reported overall, per direction, per en_source (WO/US), and on
@@ -39,7 +39,9 @@ def comet_scores(rows, batch_size=16):
 
     model = load_from_checkpoint(download_model(COMET_MODEL))
     data = [{"src": r["source"], "mt": r["hypothesis"], "ref": r["reference"]} for r in rows]
-    out = model.predict(data, batch_size=batch_size, gpus=1 if torch.cuda.is_available() else 0)
+    gpus = 1 if torch.cuda.is_available() else 0
+    # On Macs COMET sets a "fork" DataLoader context, which current torch rejects with 0 workers.
+    out = model.predict(data, batch_size=batch_size, gpus=gpus, num_workers=None if gpus else 1)
     return out.scores
 
 

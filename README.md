@@ -92,7 +92,7 @@ python evaluation/translate.py --system openai                 # OPENAI_API_KEY
 python evaluation/translate.py --system deepl                  # DEEPL_AUTH_KEY
 
 # COMET needs transformers<5, so scoring and plotting use their own environment
-python -m venv .venv-score && .venv-score/bin/pip install -r requirements/score.txt
+uv venv --python 3.12 .venv-score && uv pip install --python .venv-score/bin/python -r requirements/score.txt
 .venv-score/bin/python evaluation/score.py evaluation/outputs/*.jsonl    # -> evaluation/results/scores.json
 .venv-score/bin/python evaluation/plot.py                                 # -> evaluation/results/figures/
 ```

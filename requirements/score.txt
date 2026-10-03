@@ -1,10 +1,14 @@
 # evaluation/score.py and plot.py. Separate environment: unbabel-comet requires transformers<5,
-# huggingface-hub<1 and numpy<2, which conflict with train.txt.
+# huggingface-hub<1 and numpy<2, which conflict with train.txt. numpy 1.26 needs Python <= 3.12:
+#   uv venv --python 3.12 .venv-score && uv pip install --python .venv-score/bin/python -r requirements/score.txt
 sacrebleu==2.6.0
 sentencepiece==0.2.2      # sacrebleu's flores200 BLEU tokenizer
 unbabel-comet==2.2.7
+torch==2.14.1
+pytorch-lightning==2.6.6
 transformers==4.57.6
 huggingface-hub==0.36.2
 numpy==1.26.4
 pyyaml==6.0.3
+setuptools==80.10.2      # torchmetrics (via unbabel-comet) imports pkg_resources, removed in setuptools 81
 matplotlib==3.11.2        # evaluation/plot.py
