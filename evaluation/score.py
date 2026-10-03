@@ -32,17 +32,36 @@ def read_jsonl(path):
         return [json.loads(line) for line in f]
 
 
-def comet_scores(rows, batch_size=16):
-    """Segment-level COMET for every row; aggregated per group later."""
-    import torch
-    from comet import download_model, load_from_checkpoint
+def comet_scores(rows, cache_path, batch_size=16):
+    """Segment-level COMET for every row; aggregated per group later.
 
-    model = load_from_checkpoint(download_model(COMET_MODEL))
-    data = [{"src": r["source"], "mt": r["hypothesis"], "ref": r["reference"]} for r in rows]
-    gpus = 1 if torch.cuda.is_available() else 0
-    # On Macs COMET sets a "fork" DataLoader context, which current torch rejects with 0 workers.
-    out = model.predict(data, batch_size=batch_size, gpus=gpus, num_workers=None if gpus else 1)
-    return out.scores
+    Cached per system (keyed by row id and the exact texts), since a full run takes a while
+    without a GPU: rerunning after an interruption only scores what's missing.
+    """
+    key = lambda r: f"{r['id']}\t{r['source']}\t{r['hypothesis']}\t{r['reference']}"
+    cache = {}
+    if os.path.exists(cache_path):
+        with open(cache_path) as f:
+            cache = json.load(f)
+    todo = [r for r in rows if key(r) not in cache]
+    if todo:
+        import torch
+        from comet import download_model, load_from_checkpoint
+
+        model = load_from_checkpoint(download_model(COMET_MODEL))
+        data = [{"src": r["source"], "mt": r["hypothesis"], "ref": r["reference"]} for r in todo]
+        if torch.cuda.is_available():
+            kw = {"gpus": 1}
+        elif torch.backends.mps.is_available():  # Apple GPU: ~3x faster than CPU, same scores
+            kw = {"gpus": 1, "accelerator": "mps"}
+        else:
+            kw = {"gpus": 0}
+        out = model.predict(data, batch_size=batch_size, **kw)
+        cache.update({key(r): s for r, s in zip(todo, out.scores)})
+        os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+        with open(cache_path, "w") as f:
+            json.dump(cache, f)
+    return [cache[key(r)] for r in rows]
 
 
 def quality(rows, comet=None):
@@ -121,7 +140,8 @@ def main():
         if not rows:
             print(f"{system}: only a latency run, skipping quality/cost")
             continue
-        comet = None if args.no_comet else comet_scores(rows)
+        comet = None if args.no_comet else comet_scores(
+            rows, os.path.join(os.path.dirname(args.out), "comet_cache", f"{system}.json"))
         groups = {"all": list(range(len(rows)))}
         for i, r in enumerate(rows):
             groups.setdefault(r["direction"], []).append(i)
